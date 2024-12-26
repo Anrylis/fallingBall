@@ -9,17 +9,17 @@
     "dev": "webpack --mode development --watch"
   },
   "dependencies": {
-    "express": "^4.18.1",        // 用於創建簡單的後端伺服器
-    "cors": "^2.8.5",            // 處理跨域請求
-    "node-fetch": "^3.2.0",      // 用於發送 HTTP 請求
-    "dotenv": "^16.0.3",         // 環境變數管理
-    "ArduinoJson": "^6.18.5",    // 用於解析 JSON (如果需要)
-    "webpack": "^5.88.0",         // 用於構建前端資源（可選，根據需要）
-    "webpack-cli": "^5.1.0"       // webpack CLI
+    "express": "^4.18.1",        
+    "cors": "^2.8.5",            
+    "node-fetch": "^3.2.0",      
+    "dotenv": "^16.0.3",        
+    "ArduinoJson": "^6.18.5",    
+    "webpack": "^5.88.0",         
+    "webpack-cli": "^5.1.0"       
   },
   "devDependencies": {
-    "webpack": "^5.88.0",         // 開發環境的 Webpack
-    "webpack-cli": "^5.1.0"       // Webpack 的 CLI
+    "webpack": "^5.88.0",        
+    "webpack-cli": "^5.1.0"      
   },
   "engines": {
     "node": ">=14.0.0"
