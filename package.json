@@ -1,0 +1,29 @@
+{
+  "name": "arduino-web-game",
+  "version": "1.0.0",
+  "description": "An interactive web game with Arduino and OLED display",
+  "main": "index.js",
+  "scripts": {
+    "start": "node server.js",  
+    "build": "webpack --mode production",
+    "dev": "webpack --mode development --watch"
+  },
+  "dependencies": {
+    "express": "^4.18.1",        // 用於創建簡單的後端伺服器
+    "cors": "^2.8.5",            // 處理跨域請求
+    "node-fetch": "^3.2.0",      // 用於發送 HTTP 請求
+    "dotenv": "^16.0.3",         // 環境變數管理
+    "ArduinoJson": "^6.18.5",    // 用於解析 JSON (如果需要)
+    "webpack": "^5.88.0",         // 用於構建前端資源（可選，根據需要）
+    "webpack-cli": "^5.1.0"       // webpack CLI
+  },
+  "devDependencies": {
+    "webpack": "^5.88.0",         // 開發環境的 Webpack
+    "webpack-cli": "^5.1.0"       // Webpack 的 CLI
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "author": "Your Name",
+  "license": "MIT"
+}
