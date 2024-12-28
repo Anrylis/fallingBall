@@ -35,7 +35,7 @@ app.post('/load', (req, res) => {
         // 用戶已存在，更新暱稱，如果有需要的話
         leaderboard[userIndex].nickname = name;
     } else {
-        // 如果用戶不存在，新增用戶
+        // 如果用戶不存在，新增用戶並初始化分數為 0
         leaderboard.push({ name: user, nickname: name, score: 0 });
     }
 
@@ -57,7 +57,8 @@ app.post('/score', (req, res) => {
     return res.status(404).send({ error: 'Player not found' });
   }
 
-  player.score = Math.max(player.score, score); // 更新最高分
+  // 更新分數，選擇最高分
+  player.score = Math.max(player.score, score); // 保證分數為最高分
   res.send({ message: 'Score updated' });
 });
 
