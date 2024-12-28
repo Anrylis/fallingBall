@@ -286,8 +286,16 @@ app.post('/update-score', (req, res) => {
 
 // 獲取排行榜
 app.get('/leaderboard', (req, res) => {
-    res.json(leaderboard);
+    db.collection('leaderboard').find().sort({ score: -1 }).toArray((err, leaderboard) => {
+        if (err) {
+            console.error('Error fetching leaderboard:', err);
+            res.status(500).send('Failed to fetch leaderboard');
+            return;
+        }
+        res.json(leaderboard);  // 返回排行榜數據
+    });
 });
+
 
 // 登入狀態檢查
 app.get('/islogin', (req, res) => {
@@ -312,3 +320,4 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log('Server is running on port ' + PORT);
 });
+
