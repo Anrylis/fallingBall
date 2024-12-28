@@ -1,3 +1,100 @@
+const htmlPage = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Score Leaderboard</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            padding: 20px;
+        }
+        #loading {
+            display: block;
+            font-size: 24px;
+        }
+        #input-form {
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        input {
+            margin: 10px 0;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            width: 80%;
+        }
+        button {
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            background-color: #dd00ff;
+            color: white;
+            cursor: pointer;
+            width: 80%;
+        }
+        button:hover {
+            background-color: #ad00b3;
+        }
+        #leaderboard {
+            margin-top: 20px;
+            background-color: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .highlight {
+            background-color: #e1ace1; /* purple */
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 10px;
+            border: 1px solid #ccc;
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+
+<div id="loading">Loading...</div>
+
+<div id="input-form" style="display:none;">
+    <h2>Sign in</h2>
+    <input type="text" id="user" placeholder="Your real name" required>
+    <input type="text" id="name" placeholder="Nickname (Chinese isn't support)" required>
+    <button id="submit">Sign up/Log in</button>
+</div>
+
+<div id="leaderboard" style="display:none;">
+    <h2>~ Falling Ball Leaderboard ~</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>No.</th>
+                <th>Name</th>
+                <th>Score</th>
+            </tr>
+        </thead>
+        <tbody id="leaderboard-body">
+            <!-- Leaderboard data will be populated here -->
+        </tbody>
+    </table>
+</div>
+
+<script>
+// JavaScript code
+</script>
+
+</body>
+</html>
+`;
+
 const express = require('express');
 const cors = require('cors');
 const { Pool } = require('pg');
