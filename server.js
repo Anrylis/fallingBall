@@ -170,8 +170,7 @@ document.getElementById('submit').onclick = async () => {
             document.getElementById('input-form').style.display = 'none';
             document.getElementById('leaderboard').style.display = 'block';
             updateLeaderboard();
-            setInterval(updateLeaderboard, 10000); // Update every 10 seconds
-            startGame();
+            setInterval(updateLeaderboard, 10000); // Update every 10 second
             
         } else {
             alert('Nickname isnt correct!');
