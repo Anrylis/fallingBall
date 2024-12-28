@@ -160,8 +160,7 @@ document.getElementById('submit').onclick = async () => {
     name = document.getElementById('name').value;
 
     if (user && name) {
-        // Load user data
-        const response = await fetch(apiUrl + '/load', {
+        const response = await fetch(`${apiUrl}/load`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ user, name })
@@ -174,19 +173,17 @@ document.getElementById('submit').onclick = async () => {
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded'
                 },
-                body: 'score=' + data['score']
+                body: 'score=' + data['score'] + '&user=' + user // Send user along with score
             });
 
-            // Hide input form and show leaderboard
             document.getElementById('input-form').style.display = 'none';
             document.getElementById('leaderboard').style.display = 'block';
             updateLeaderboard();
-            setInterval(updateLeaderboard, 10000); // Update every 10 second
-            
+            setInterval(updateLeaderboard, 10000); 
         } else {
             alert('Nickname isnt correct!');
         }
-    }else{
+    } else {
         alert('Please enter your real name and nickname!');
     }
 };
