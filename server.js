@@ -21,23 +21,37 @@ app.post('/wakeup', (req, res) => {
 
 // 玩家登入
 app.post('/load', (req, res) => {
-  const { user, name } = req.body;
-  if (!user || !name) {
-    return res.status(400).send({ error: 'Invalid input' });
-  }
+    const { user, name } = req.body;
 
-  const existingUser = leaderboard.find((player) => player.name === name);
-  if (existingUser) {
-    return res.status(400).send({ error: 'Nickname already taken' });
-  }
+    // 檢查用戶名和暱稱是否有效，避免重複登錄或資料錯誤
+    if (!user || !name) {
+        return res.status(400).send({ message: "Invalid name or user data" });
+    }
 
-  leaderboard.push({ user, name, score: 0 });
-  res.send({ message: 'Player registered' });
+    // 如果用戶已經存在，更新資料
+    let userIndex = leaderboard.findIndex(player => player.name === user);
+
+    if (userIndex !== -1) {
+        // 用戶已存在，更新暱稱，如果有需要的話
+        leaderboard[userIndex].nickname = name;
+    } else {
+        // 如果用戶不存在，新增用戶
+        leaderboard.push({ name: user, nickname: name, score: 0 });
+    }
+
+    res.send({ status: 'ok', message: 'Player data loaded' });
 });
 
 // 更新分數
 app.post('/score', (req, res) => {
   const { name, score } = req.body;
+  
+  // 檢查是否提供了有效的分數
+  if (!name || score === undefined) {
+    return res.status(400).send({ message: "Invalid score data" });
+  }
+
+  // 查找玩家並更新分數
   const player = leaderboard.find((player) => player.name === name);
   if (!player) {
     return res.status(404).send({ error: 'Player not found' });
