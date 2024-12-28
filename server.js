@@ -11,7 +11,7 @@ let users = {};  // 存儲用戶資料
 app.use(cors());
 
 // 使用 JSON 解析請求體
-app.use(bodyParser.json());\
+app.use(bodyParser.json());
 
 // 路由設定 - 處理 /update-score 請求
 app.post('/update-score', (req, res) => {
