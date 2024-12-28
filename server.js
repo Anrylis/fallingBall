@@ -147,7 +147,7 @@ const htmlPage = `<!DOCTYPE html>
                 let rank = 1;
                 data.forEach(user => {
                     const row = document.createElement('tr');
-                    row.innerHTML = `<td>${rank}</td><td>${user.name}</td><td>${user.score}</td>`;
+                   row.innerHTML = "<td>" + rank + "</td><td>" + user.name + "</td><td>" + user.score + "</td>";
                     if (user.name === userNickname) row.classList.add('highlight');
                     tbody.appendChild(row);
                     rank++;
