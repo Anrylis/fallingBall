@@ -175,7 +175,7 @@ document.getElementById('submit').onclick = async () => {
             alert('Nickname isn\'t correct!');
         }
     }else{
-        alert('Please enter your real name and nickname!')
+        alert('Please enter your real name and nickname!');
     }
 };
 
