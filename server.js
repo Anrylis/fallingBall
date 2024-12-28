@@ -87,7 +87,7 @@ const htmlPage = `
 </div>
 
 <div id="leaderboard" style="display:none;">
-    <h2>~Falling Ball Leaderboard~</h2>
+    <h2>~ Falling Ball Leaderboard ~</h2>
     <table>
         <thead>
             <tr>
@@ -295,7 +295,7 @@ app.get('/myscore', (req, res) => {
     if (user && users[user]) {
         return res.send(users[user].score.toString());
     }
-    res.status(404).send('User not found');
+    res.status(404).send('0');
 });
 
 // 啟動服務器
