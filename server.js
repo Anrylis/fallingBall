@@ -171,6 +171,8 @@ document.getElementById('submit').onclick = async () => {
             document.getElementById('leaderboard').style.display = 'block';
             updateLeaderboard();
             setInterval(updateLeaderboard, 10000); // Update every 10 seconds
+            startGame();
+            
         } else {
             alert('Nickname isnt correct!');
         }
