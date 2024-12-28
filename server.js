@@ -26,15 +26,37 @@ pool.connect((err) => {
   }
 });
 
+// 確保資料表存在
+async function createTableIfNotExists() {
+  const createTableQuery = `
+    CREATE TABLE IF NOT EXISTS users (
+      id SERIAL PRIMARY KEY,
+      username VARCHAR(255) UNIQUE NOT NULL,
+      name VARCHAR(255) NOT NULL,
+      score INTEGER DEFAULT 0
+    );
+  `;
+
+  try {
+    await pool.query(createTableQuery);
+    console.log("Users table is ready!");
+  } catch (err) {
+    console.error('Error creating table:', err);
+  }
+}
+
+// 在伺服器啟動時檢查資料表
+createTableIfNotExists();
+
 // 讓後端起床
-app.post('/wakeup', async (req, res) =>{
-      try {
-        res.status(200).json('hello');
-      } catch (err) {
-        console.error('Error loading user:', err);
-        res.status(500).send('Server error');
-      }
-})
+app.post('/wakeup', async (req, res) => {
+  try {
+    res.status(200).json('hello');
+  } catch (err) {
+    console.error('Error loading user:', err);
+    res.status(500).send('Server error');
+  }
+});
 
 // 載入或新增使用者資料
 app.post('/load', async (req, res) => {
@@ -77,10 +99,10 @@ app.post('/update-score', async (req, res) => {
     return res.status(400).send('User and score are required');
   }
 
-  try{  // 抓作弊
+  try {  // 抓作弊
     const prev = await pool.query('SELECT * FROM users WHERE username = $1', [user]);
-    if(score - prev.rows[0].score > 70){
-        return res.status(402).send('No cheating');
+    if (score - prev.rows[0].score > 70) {
+      return res.status(402).send('No cheating');
     }
   } catch (err) {
     console.error('Error getting score:', err);
@@ -107,15 +129,14 @@ app.post('/update-score', async (req, res) => {
 
 // 返回排行榜資料，按照 score 排序
 app.get('/leaderboard', async (req, res) => {
-    try {
-      const result = await pool.query('SELECT name, score FROM users ORDER BY score DESC');
-      res.status(200).json(result.rows);
-    } catch (err) {
-      console.error('Error fetching leaderboard:', err);
-      res.status(500).send('Server error');
-    }
-  });
-  
+  try {
+    const result = await pool.query('SELECT name, score FROM users ORDER BY score DESC');
+    res.status(200).json(result.rows);
+  } catch (err) {
+    console.error('Error fetching leaderboard:', err);
+    res.status(500).send('Server error');
+  }
+});
 
 // 設定伺服器監聽埠
 const port = process.env.PORT || 3000;
