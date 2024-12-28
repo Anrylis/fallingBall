@@ -114,7 +114,7 @@ const htmlPage = `<!DOCTYPE html>
             userNickname = document.getElementById('nickname').value;
             if (userName && userNickname) {
                 try {
-                    const response = await fetch(`${apiUrl}/load`, {
+                    const response = await fetch(apiUrl + '/load' , {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ user: userName, name: userNickname })
@@ -137,7 +137,7 @@ const htmlPage = `<!DOCTYPE html>
 
         async function updateLeaderboard() {
             try {
-                const response = await fetch(`${apiUrl}/leaderboard`);
+                const response = await fetch(apiUrl + '/leaderboard');
                 const data = await response.json();
                 data.sort((a, b) => b.score - a.score);
 
