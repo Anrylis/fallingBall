@@ -160,7 +160,7 @@ document.getElementById('submit').onclick = async () => {
     name = document.getElementById('name').value;
 
     if (user && name) {
-        const response = await fetch(`${apiUrl}/load`, {
+        const response = await fetch(apiUrl+'/load', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ user, name })
