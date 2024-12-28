@@ -1,323 +1,124 @@
 const express = require('express');
-const app = express();
 const cors = require('cors');
+const { Pool } = require('pg');
 const bodyParser = require('body-parser');
+const app = express();
 
-// 用於存儲玩家分數的臨時陣列 
-let leaderboard = [];
-let users = {};  // 存儲用戶資料
-
-// 使用 CORS，允許跨域請求
+// 使用 bodyParser 來解析 POST 請求中的 JSON 資料，使用 cors 中間件
 app.use(cors());
-
-// 使用 JSON 解析請求體
 app.use(bodyParser.json());
 
-// 路由設定 - 處理 /update-score 請求
-app.post('/update-score', (req, res) => {
-  const { user, score } = req.body;  // 解析來自 Arduino 的請求數據
-  console.log(`Received score for ${user}: ${score}`);
-  
-  // 您可以在這裡添加代碼來處理分數的儲存，譬如將其儲存到資料庫
-
-  // 回應成功訊息
-  res.status(200).send('Score updated successfully');
+// 設置 PostgreSQL 連接池
+const pool = new Pool({
+  user: process.env.DB_USER,
+  host: process.env.DB_HOST,
+  database: process.env.DB_NAME,
+  password: process.env.DB_PASSWORD,
+  port: process.env.DB_PORT,
 });
 
-const htmlPage = `
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Score Leaderboard</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f0f0f0;
-            padding: 20px;
-        }
-        #loading {
-            display: block;
-            font-size: 24px;
-        }
-        #input-form {
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-        }
-        input {
-            margin: 10px 0;
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            width: 80%;
-        }
-        button {
-            padding: 10px;
-            border: none;
-            border-radius: 5px;
-            background-color: #dd00ff;
-            color: white;
-            cursor: pointer;
-            width: 80%;
-        }
-        button:hover {
-            background-color: #ad00b3;
-        }
-        #leaderboard {
-            margin-top: 20px;
-            background-color: white;
-            padding: 20px;
-            border-radius: 5px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-        }
-        .highlight {
-            background-color: #e1ace1; /* purple */
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        th, td {
-            padding: 10px;
-            border: 1px solid #ccc;
-            text-align: left;
-        }
-    </style>
-</head>
-<body>
+// 測試資料庫連線
+pool.connect((err) => {
+  if (err) {
+    console.error('Database connection error:', err.stack);
+  } else {
+    console.log('Connected to the database');
+  }
+});
 
-<div id="loading">Loading...</div>
+// 讓後端起床
+app.post('/wakeup', async (req, res) =>{
+      try {
+        res.status(200).json('hello');
+      } catch (err) {
+        console.error('Error loading user:', err);
+        res.status(500).send('Server error');
+      }
+})
 
-<div id="input-form" style="display:none;">
-    <h2>Sign in</h2>
-    <input type="text" id="user" placeholder="Your real name" required>
-    <input type="text" id="name" placeholder="Nickname (Chinese isn't support)" required>
-    <button id="submit">Sign up/Log in</button>
-</div>
+// 載入或新增使用者資料
+app.post('/load', async (req, res) => {
+  const { user, name } = req.body;
 
-<div id="leaderboard" style="display:none;">
-    <h2>~ Falling Ball Leaderboard ~</h2>
-    <table>
-        <thead>
-            <tr>
-                <th>No.</th>
-                <th>Name</th>
-                <th>Score</th>
-            </tr>
-        </thead>
-        <tbody id="leaderboard-body">
-            <!-- Leaderboard data will be populated here -->
-        </tbody>
-    </table>
-</div>
+  if (!user || !name) {
+    return res.status(400).send('User and name are required');
+  }
 
-<script>
-const apiUrl = 'https://fallingball.onrender.com';
-let user;
-let name;
-let run = true;
+  try {
+    // 查詢是否已有該使用者
+    const result = await pool.query('SELECT * FROM users WHERE username = $1', [user]);
 
-async function wakeUpServer() {
-    try{
-        fetch('/islogin')
-            .then(response => response.text())
-            .then(data => {
-                if(data == '1'){
-                    document.getElementById('loading').innerHTML = "Already Signed in";
-                    run = false;
-                    return;
-                }
-            });
-    } catch (error) {
-        console.error('Error:', error);
-    }
-
-    try {
-        const response = await fetch(apiUrl + '/wakeup', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-        });
-
-        const data = await response.text();
-        if (data == '"hello"' && run) {
-            // 如果回應是 "hello"，隱藏 loading 畫面並顯示內容
-            document.getElementById('loading').style.display = 'none';
-            document.getElementById('input-form').style.display = 'flex';
-        } else {
-            console.error('Unexpected response:', data);
-        }
-    } catch (error) {
-        console.error('Error:', error);
-    }
-}
-
-document.getElementById('submit').onclick = async () => {
-    user = document.getElementById('user').value;
-    name = document.getElementById('name').value;
-
-    if (user && name) {
-        const response = await fetch(apiUrl+'/load', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ user, name })
-        });
-        const data = await response.json();
-
-        if (response.ok) {
-            fetch('/load-score', { 
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded'
-                },
-                body: 'score=' + data['score'] + '&user=' + user // Send user along with score
-            });
-
-            document.getElementById('input-form').style.display = 'none';
-            document.getElementById('leaderboard').style.display = 'block';
-            updateLeaderboard();
-            setInterval(updateLeaderboard, 10000); 
-        } else {
-            alert('Nickname isnt correct!');
-        }
+    if (result.rows.length > 0) {
+      // 如果使用者存在但名稱不符
+      if (result.rows[0].name !== name) {
+        return res.status(403).send('Name does not match for the provided user');
+      }
+      // 如果名稱符合，回傳使用者資料
+      res.status(200).json(result.rows[0]);
     } else {
-        alert('Please enter your real name and nickname!');
+      // 如果使用者不存在，新增並設置 score 為 0
+      const insertResult = await pool.query(
+        'INSERT INTO users (username, name, score) VALUES ($1, $2, 0) RETURNING *',
+        [user, name]
+      );
+      res.status(201).json(insertResult.rows[0]);
     }
-};
-
-async function update(score) {
-    const response = await fetch(apiUrl + '/update-score', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ user, score })
-    });
-    if (!response.ok) {
-        if(response.status == 402)
-            alert("NO CHEATING");
-        console.error('update failed!');
-    }
-}
-
-async function updateLeaderboard() {
-    const response = await fetch(apiUrl + '/leaderboard');
-    const data = await response.json();
-
-    const tbody = document.getElementById('leaderboard-body');
-    tbody.innerHTML = ''; // Clear previous data
-
-    data.sort(function(a, b) { return b.score - a.score }); // Sort by score descending
-
-    fetch('/myscore')
-        .then(response => response.text())
-        .then(function(data) {
-            update(data);
-        });
-
-    let num = 1;
-    data.forEach(function(user) {
-        const row = document.createElement('tr');
-        row.innerHTML = '<td>' + num + '</td><td>' + user.name + '</td><td>' + user.score + '</td>';
-        num += 1;
-
-        if (user.name === name) {
-            row.classList.add('highlight'); // Highlight ur row
-        }
-
-        tbody.appendChild(row);
-    });
-}
-
-window.onload = wakeUpServer;
-</script>
-
-</body>
-</html>
-`;
-
-// 首頁顯示
-app.get('/', (req, res) => {
-    res.send(htmlPage);  // 返回存儲在 htmlPage 變數中的 HTML
+  } catch (err) {
+    console.error('Error loading user:', err);
+    res.status(500).send('Server error');
+  }
 });
 
-// 叫醒服務器
-app.post('/wakeup', (req, res) => {
-    res.send('"hello"');
-});
+// 更新使用者的 score
+app.post('/update-score', async (req, res) => {
+  const { user, score } = req.body;
 
-// 獲取并更新玩家分數
-app.post('/load', (req, res) => {
-    const { user, name } = req.body;
+  if (!user || score === undefined) {
+    return res.status(400).send('User and score are required');
+  }
 
-    if (!user || !name) {
-        return res.status(400).send('User or name missing');
+  try{  // 抓作弊
+    const prev = await pool.query('SELECT * FROM users WHERE username = $1', [user]);
+    if(score - prev.rows[0].score > 70){
+        return res.status(402).send('No cheating');
     }
+  } catch (err) {
+    console.error('Error getting score:', err);
+    res.status(500).send('Server error');
+  }
 
-    if (!users[user]) {
-        users[user] = { name, score: 0 };  // 初始化用戶
-    }
-
-    return res.json({ score: users[user].score });
-});
-
-//更新分數
-app.post('/update-score', (req, res) => {
-    const { user, score } = req.body;
-
-    // 更新數據庫中的分數
-    db.collection('leaderboard').updateOne(
-        { user: user },
-        { $set: { score: score } },
-        { upsert: true },  // 如果沒有找到則插入新用戶
-        (err, result) => {
-            if (err) {
-                console.error('Error updating leaderboard:', err);
-                res.status(500).send('Failed to update leaderboard');
-                return;
-            }
-
-            res.status(200).send('Score updated successfully');
-        }
+  try {
+    // 更新指定 user 的 score
+    const result = await pool.query(
+      'UPDATE users SET score = $1 WHERE username = $2 RETURNING *',
+      [parseInt(score), user]
     );
-});
 
-
-// 獲取排行榜
-app.get('/leaderboard', (req, res) => {
-    db.collection('leaderboard').find().sort({ score: -1 }).toArray((err, leaderboard) => {
-        if (err) {
-            console.error('Error fetching leaderboard:', err);
-            res.status(500).send('Failed to fetch leaderboard');
-            return;
-        }
-        res.json(leaderboard);  // 返回排行榜數據
-    });
-});
-
-
-// 登入狀態檢查
-app.get('/islogin', (req, res) => {
-    const user = req.query.user;
-    if (user && users[user]) {
-        return res.send('1');  // 已登錄
+    if (result.rows.length > 0) {
+      res.status(200).json(result.rows[0]);
+    } else {
+      res.status(404).send('User not found');
     }
-    res.send('0');  // 未登錄
+  } catch (err) {
+    console.error('Error updating score:', err);
+    res.status(500).send('Server error');
+  }
 });
 
-// 獲取當前分數
-app.get('/myscore', (req, res) => {
-    const user = req.query.user;
-    if (user && users[user]) {
-        return res.send(users[user].score.toString());
+// 返回排行榜資料，按照 score 排序
+app.get('/leaderboard', async (req, res) => {
+    try {
+      const result = await pool.query('SELECT name, score FROM users ORDER BY score DESC');
+      res.status(200).json(result.rows);
+    } catch (err) {
+      console.error('Error fetching leaderboard:', err);
+      res.status(500).send('Server error');
     }
-    res.status(404).send('0');
-});
+  });
+  
 
-// 啟動服務器
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-    console.log('Server is running on port ' + PORT);
+// 設定伺服器監聽埠
+const port = process.env.PORT || 3000;
+app.listen(port, () => {
+  console.log(`Server is running on port ${port}`);
 });
-
