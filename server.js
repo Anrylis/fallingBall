@@ -262,26 +262,27 @@ app.post('/load', (req, res) => {
     return res.json({ score: users[user].score });
 });
 
-// 更新分數
+//更新分數
 app.post('/update-score', (req, res) => {
     const { user, score } = req.body;
 
-    if (!user || score == undefined) {
-        return res.status(400).send('Invalid request');
-    }
+    // 更新數據庫中的分數
+    db.collection('leaderboard').updateOne(
+        { user: user },
+        { $set: { score: score } },
+        { upsert: true },  // 如果沒有找到則插入新用戶
+        (err, result) => {
+            if (err) {
+                console.error('Error updating leaderboard:', err);
+                res.status(500).send('Failed to update leaderboard');
+                return;
+            }
 
-    if (!users[user]) {
-        return res.status(404).send('User not found');
-    }
-
-    // 更新用戶分數
-    users[user].score = score;
-
-    // 更新排行榜
-    leaderboard = Object.values(users).sort((a, b) => b.score - a.score);
-
-    res.send('Score updated');
+            res.status(200).send('Score updated successfully');
+        }
+    );
 });
+
 
 // 獲取排行榜
 app.get('/leaderboard', (req, res) => {
