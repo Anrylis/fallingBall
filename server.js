@@ -11,7 +11,18 @@ let users = {};  // 存儲用戶資料
 app.use(cors());
 
 // 使用 JSON 解析請求體
-app.use(bodyParser.json());
+app.use(bodyParser.json());\
+
+// 路由設定 - 處理 /update-score 請求
+app.post('/update-score', (req, res) => {
+  const { user, score } = req.body;  // 解析來自 Arduino 的請求數據
+  console.log(`Received score for ${user}: ${score}`);
+  
+  // 您可以在這裡添加代碼來處理分數的儲存，譬如將其儲存到資料庫
+
+  // 回應成功訊息
+  res.status(200).send('Score updated successfully');
+});
 
 const htmlPage = `
 <!DOCTYPE html>
