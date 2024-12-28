@@ -103,28 +103,21 @@ const htmlPage = `
 </div>
 
 <script>
-const apiUrl = 'https://fallingball.onrender.com';
-let user;
-let name;
-let run = true;
-
 async function wakeUpServer() {
-    try{
-        fetch('/islogin')
-            .then(response => response.text())
-            .then(data => {
-                if(data == '1'){
-                    document.getElementById('loading').innerHTML = "Already Signed in";
-                    run = false;
-                    return;
-                }
-            });
+    try {
+        const loginResponse = await fetch('/islogin');
+        const loginData = await loginResponse.text();
+        if (loginData == '1') {
+            document.getElementById('loading').innerHTML = "Already Signed in";
+            run = false;
+            return;
+        }
     } catch (error) {
-        console.error('Error:', error);
+        console.error('Error checking login status:', error);
     }
 
     try {
-        const response = await fetch(apiUrl + '/wakeup', {
+        const response = await fetch(`${apiUrl}/wakeup`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -132,8 +125,7 @@ async function wakeUpServer() {
         });
 
         const data = await response.text();
-        if (data == '\"hello\"' && run) {
-            // 如果回應是 "hello"，隱藏 loading 畫面並顯示內容
+        if (data == '"hello"' && run) {
             document.getElementById('loading').style.display = 'none';
             document.getElementById('input-form').style.display = 'flex';
         } else {
@@ -149,79 +141,91 @@ document.getElementById('submit').onclick = async () => {
     name = document.getElementById('name').value;
 
     if (user && name) {
-        // Load user data
-        const response = await fetch(apiUrl + '/load', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ user, name })
-        });
-        const data = await response.json();
-
-        if (response.ok) {
-            fetch('/load-score', { 
+        try {
+            const response = await fetch(`${apiUrl}/load`, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded'
-                },
-                body: 'score=' + data['score']
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ user, name })
             });
 
-            // Hide input form and show leaderboard
-            document.getElementById('input-form').style.display = 'none';
-            document.getElementById('leaderboard').style.display = 'block';
-            updateLeaderboard();
-            setInterval(updateLeaderboard, 10000); // Update every 10 seconds
-        } else {
-            alert('Nickname isn\'t correct!');
+            const data = await response.json();
+            if (response.ok) {
+                fetch('/load-score', { 
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: 'score=' + data['score']
+                });
+
+                document.getElementById('input-form').style.display = 'none';
+                document.getElementById('leaderboard').style.display = 'block';
+                updateLeaderboard();
+                setInterval(updateLeaderboard, 10000); // Update every 10 seconds
+            } else {
+                alert('Nickname isn\'t correct!');
+            }
+        } catch (error) {
+            console.error('Error submitting user info:', error);
         }
-    }else{
-        alert('Please enter your real name and nickname!')
+    } else {
+        alert('Please enter your real name and nickname!');
     }
 };
 
-async function update(score) {
-    const response = await fetch(apiUrl + '/update-score', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ user, score })
-    });
-    if (!response.ok) {
-        if(response.status == 402)
-            alert("NO CHEATING");
-        console.error('update failed!');
+async function updateLeaderboard() {
+    try {
+        const response = await fetch(`${apiUrl}/leaderboard`);
+        const data = await response.json();
+
+        const tbody = document.getElementById('leaderboard-body');
+        tbody.innerHTML = ''; // Clear previous data
+
+        data.sort((a, b) => b.score - a.score); // Sort by score descending
+
+        fetch('/myscore')
+            .then(response => response.text())
+            .then(data => {
+                update(data);
+            });
+
+        let num = 1;
+        data.forEach(user => {
+            const row = document.createElement('tr');
+            row.innerHTML = `<td>${num}</td><td>${user.name}</td><td>${user.score}</td>`;
+            num += 1;
+
+            if (user.name === name) {
+                row.classList.add('highlight'); // Highlight ur row
+            }
+
+            tbody.appendChild(row);
+        });
+    } catch (error) {
+        console.error('Error updating leaderboard:', error);
     }
 }
 
-async function updateLeaderboard() {
-    const response = await fetch(apiUrl + '/leaderboard');
-    const data = await response.json();
-
-    const tbody = document.getElementById('leaderboard-body');
-    tbody.innerHTML = ''; // Clear previous data
-
-    data.sort(function(a, b) { return b.score - a.score }); // Sort by score descending
-
-    fetch('/myscore')
-        .then(response => response.text())
-        .then(function(data) {
-            update(data);
+async function update(score) {
+    try {
+        const response = await fetch(`${apiUrl}/update-score`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ user, score })
         });
 
-    let num = 1;
-    data.forEach(function(user) {
-        const row = document.createElement('tr');
-        row.innerHTML = '<td>' + num + '</td><td>' + user.name + '</td><td>' + user.score + '</td>';
-        num += 1;
-
-        if (user.name === name) {
-            row.classList.add('highlight'); // Highlight ur row
+        if (!response.ok) {
+            if (response.status == 402) {
+                alert("NO CHEATING");
+            }
+            console.error('Update failed!');
         }
-
-        tbody.appendChild(row);
-    });
+    } catch (error) {
+        console.error('Error updating score:', error);
+    }
 }
 
-window.onload = wakeUpServer;
+window.onload = wakeUpServer; 
 </script>
 
 </body>
