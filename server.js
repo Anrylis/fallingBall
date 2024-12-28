@@ -97,7 +97,7 @@ const htmlPage = `<!DOCTYPE html>
 
         async function wakeUpServer() {
             try {
-                const response = await fetch(`${apiUrl}/wakeup`, { method: 'POST' });
+                const response = await fetch(apiUrl + '/wakeup', { method: 'POST' });
                 if (response.ok) {
                     document.getElementById('loading').style.display = 'none';
                     document.getElementById('input-form').style.display = 'block';
