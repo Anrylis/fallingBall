@@ -155,6 +155,10 @@ app.post('/wakeup', async (req, res) => {
   }
 });
 
+app.get('/', (req, res) => {
+  res.send(htmlPage);  // 這裡返回的 html 頁面
+});
+
 // 載入或新增使用者資料
 app.post('/load', async (req, res) => {
   const { user, name } = req.body;
