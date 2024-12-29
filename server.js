@@ -94,12 +94,11 @@ let name;
 let run = true;
 
 async function wakeUpServer() {
-    console.log("Entering wakeUpServer function...");
-    try {
+    try{
         fetch('/islogin')
             .then(response => response.text())
             .then(data => {
-                if (data == '1') {
+                if(data == '1'){
                     document.getElementById('loading').innerHTML = "Already Signed in";
                     run = false;
                     return;
@@ -110,18 +109,15 @@ async function wakeUpServer() {
     }
 
     try {
-        console.log("Sending fetch request to wake up server...");
-        const response = await fetch(apiUrl + '/wakeup', {
+        const response = await fetch(apiUrl+ '/wakeup', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
         });
 
-        console.log("Fetch request sent!");
-
         const data = await response.text();
-        if (data == '"hello"' && run) {
+        if (data == '\"hello\"' && run) {
             // 如果回應是 "hello"，隱藏 loading 畫面並顯示內容
             document.getElementById('loading').style.display = 'none';
             document.getElementById('input-form').style.display = 'flex';
