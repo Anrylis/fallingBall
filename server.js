@@ -164,44 +164,41 @@ document.getElementById('submit').onclick = async () => {
     user = document.getElementById('user').value;
     name = document.getElementById('name').value;
 
+    // 確保用戶名和暱稱有效
     if (user && name) {
-        // 在進行後續處理之前，檢查用戶是否已登錄
-        const loginResponse = await fetch('/islogin');
-        const loginStatus = await loginResponse.text();
+        // 向後端發送請求，嘗試登入或創建新用戶
+        const response = await fetch(apiUrl + '/load', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ user, name })
+        });
 
-        if (loginStatus === '1') {
-            login = user;
-            const response = await fetch(apiUrl + '/load', {
+        const data = await response.json();
+
+        if (response.ok) {
+            login = user;  // 登錄成功後，設置登錄的用戶名
+
+            // 更新分數
+            const scoreResponse = await fetch('/load-score', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ user, name })
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: 'score=' + data['score']
             });
-            const data = await response.json();
 
-            if (response.ok) {
-                fetch('/load-score', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded'
-                    },
-                    body: 'score=' + data['score']
-                });
+            // 隱藏登錄表單，顯示排行榜
+            document.getElementById('input-form').style.display = 'none';
+            document.getElementById('leaderboard').style.display = 'block';
 
-                // Hide input form and show leaderboard
-                document.getElementById('input-form').style.display = 'none';
-                document.getElementById('leaderboard').style.display = 'block';
-                updateLeaderboard();
-                setInterval(updateLeaderboard, 10000); // Update every 10 seconds
+            updateLeaderboard();  // 更新排行榜
+            setInterval(updateLeaderboard, 10000);  // 每 10 秒更新一次排行榜
 
-                login = user;  // 設定為登入的用戶名
-            } else {
-                alert('Nickname is incorrect!');
-            }
         } else {
-            alert('Please log in first!');
+            alert('Nickname is incorrect or something went wrong!');
         }
     } else {
-        alert('Please enter your real name and nickname!');
+        alert('Please enter both your real name and nickname!');
     }
 };
 
