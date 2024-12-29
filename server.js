@@ -183,7 +183,7 @@ async function updateLeaderboard() {
     let num = 1;
     data.forEach(user => {
         const row = document.createElement('tr');
-         row.innerHTML = '<td>' + (index + 1) + '</td><td>' + user.name + '</td><td>' + user.score + '</td>';
+         row.innerHTML = '<td>' + num + '</td><td>' + user.name + '</td><td>' + user.score + '</td>';
         num += 1;
 
         if (user.name === name) {
@@ -250,6 +250,20 @@ app.get('/islogin', (req, res) => {
     res.status(200).send('0');  // 0 表示未登錄
   }
 });
+
+app.get('/myscore', (req, res) => {
+  if (!req.query.user) {
+    return res.status(400).send('User is required');
+  }
+
+  const user = users[req.query.user];
+  if (!user) {
+    return res.status(404).send('User not found');
+  }
+
+  res.status(200).send(user.score.toString());
+});
+
 
 // 返回排行榜資料，按照 score 排序
 app.get('/leaderboard', (req, res) => {
