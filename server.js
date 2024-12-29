@@ -1,3 +1,32 @@
+const express = require('express');
+const cors = require('cors');
+const { Pool } = require('pg');
+const bodyParser = require('body-parser');
+const app = express();
+
+// 使用 bodyParser 來解析 POST 請求中的 JSON 資料，使用 cors 中間件
+app.use(cors());
+app.use(bodyParser.json());
+
+// 設置 PostgreSQL 連接池
+const pool = new Pool({
+  user: process.env.DB_USER,
+  host: process.env.DB_HOST,
+  database: process.env.DB_NAME,
+  password: process.env.DB_PASSWORD,
+  port: process.env.DB_PORT,
+});
+
+// 測試資料庫連線
+pool.connect((err) => {
+  if (err) {
+    console.error('Database connection error:', err.stack);
+  } else {
+    console.log('Connected to the database');
+  }
+});
+
+// 測試路由，返回前端頁面
 const htmlpage = `
 <!DOCTYPE html>
 <html lang="en">
@@ -210,34 +239,8 @@ window.onload = wakeUpServer;
 </html>
 `;
 
-const express = require('express');
-const cors = require('cors');
-const { Pool } = require('pg');
-const bodyParser = require('body-parser');
-const app = express();
 
-// 使用 bodyParser 來解析 POST 請求中的 JSON 資料，使用 cors 中間件
-app.use(cors());
-app.use(bodyParser.json());
-
-// 設置 PostgreSQL 連接池
-const pool = new Pool({
-  user: process.env.DB_USER,
-  host: process.env.DB_HOST,
-  database: process.env.DB_NAME,
-  password: process.env.DB_PASSWORD,
-  port: process.env.DB_PORT,
-});
-
-// 測試資料庫連線
-pool.connect((err) => {
-  if (err) {
-    console.error('Database connection error:', err.stack);
-  } else {
-    console.log('Connected to the database');
-  }
-});
-
+// 前端路由
 app.get('/', (req, res) => {
   res.send(htmlpage); // 將 htmlpage 的內容作為響應返回
 });
@@ -252,7 +255,7 @@ app.post('/wakeup', async (req, res) => {
   }
 });
 
-// 載入或新增使用者資料
+// 註冊 / 登入
 app.post('/load', async (req, res) => {
   const { user, name } = req.body;
 
@@ -261,18 +264,14 @@ app.post('/load', async (req, res) => {
   }
 
   try {
-    // 查詢是否已有該使用者
     const result = await pool.query('SELECT * FROM users WHERE username = $1', [user]);
 
     if (result.rows.length > 0) {
-      // 如果使用者存在但名稱不符
       if (result.rows[0].name !== name) {
         return res.status(403).send('Name does not match for the provided user');
       }
-      // 如果名稱符合，回傳使用者資料
       res.status(200).json(result.rows[0]);
     } else {
-      // 如果使用者不存在，新增並設置 score 為 0
       const insertResult = await pool.query(
         'INSERT INTO users (username, name, score) VALUES ($1, $2, $3) RETURNING *',
         [user, name, 0]
@@ -285,7 +284,18 @@ app.post('/load', async (req, res) => {
   }
 });
 
-// 更新使用者的 score
+// 加載分數
+app.post('/load-score', async (req, res) => {
+  const { score } = req.body;
+  try {
+    res.status(200).send('Score loaded successfully');
+  } catch (err) {
+    console.error('Error loading score:', err);
+    res.status(500).send('Server error');
+  }
+});
+
+// 更新分數
 app.post('/update-score', async (req, res) => {
   const { user, score } = req.body;
 
@@ -294,13 +304,15 @@ app.post('/update-score', async (req, res) => {
   }
 
   try {
-    // 抓作弊行為
     const prev = await pool.query('SELECT * FROM users WHERE username = $1', [user]);
+    if (prev.rows.length === 0) {
+      return res.status(404).send('User not found');
+    }
+
     if (score - prev.rows[0].score > 70) {
       return res.status(402).send('No cheating');
     }
 
-    // 更新指定 user 的 score
     const result = await pool.query(
       'UPDATE users SET score = $1 WHERE username = $2 RETURNING *',
       [parseInt(score, 10), user]
@@ -324,6 +336,25 @@ app.get('/leaderboard', async (req, res) => {
     res.status(200).json(result.rows);
   } catch (err) {
     console.error('Error fetching leaderboard:', err);
+    res.status(500).send('Server error');
+  }
+});
+
+// 返回用戶的分數
+app.get('/myscore', async (req, res) => {
+  if (!user) {
+    return res.status(403).send('User not logged in');
+  }
+
+  try {
+    const result = await pool.query('SELECT score FROM users WHERE username = $1', [user]);
+    if (result.rows.length > 0) {
+      res.status(200).send(result.rows[0].score.toString());
+    } else {
+      res.status(404).send('User not found');
+    }
+  } catch (err) {
+    console.error('Error fetching score:', err);
     res.status(500).send('Server error');
   }
 });
