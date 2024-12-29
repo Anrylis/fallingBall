@@ -104,6 +104,7 @@ const apiUrl = 'https://fallingball.onrender.com';
 let user;
 let name;
 let run = true;
+let users = {};  // 用於存儲用戶資料
 
 async function wakeUpServer() {
     try {
