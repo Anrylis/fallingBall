@@ -195,6 +195,11 @@ async function updateLeaderboard() {
 }
 
 async function update(score) {
+  if (isNaN(score)) {
+        console.error("Invalid score:", score);
+        alert("Invalid score value.");
+        return; // 如果 score 無效，直接返回
+    }
     const response = await fetch(apiUrl + '/update-score', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -322,7 +327,7 @@ app.post('/load', async (req, res) => {
 app.post('/update-score', async (req, res) => {
   const { user, score } = req.body;
 
-  if (!user || score === undefined) {
+  if (!user || score === undefined || isNaN(score) {
     return res.status(400).send('User and score are required');
   }
 
