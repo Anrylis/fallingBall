@@ -326,8 +326,12 @@ app.post('/load', async (req, res) => {
 // 更新使用者的 score
 app.post('/update-score', async (req, res) => {
   const { user, score } = req.body;
+    if (isNaN(score)) {
+        console.error("Invalid score:", score);
+        score = 0;  // 設為 0
+    }
 
-  if (!user || score === undefined || isNaN(score)) {
+  if (!user || score === undefined) {
     return res.status(400).send('User and score are required');
   }
 
