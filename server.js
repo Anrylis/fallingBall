@@ -238,15 +238,6 @@ const pool = new Pool({
   port: process.env.DB_PORT,
 });
 
-// 測試資料庫連線
-pool.connect((err) => {
-  if (err) {
-    console.error('Database connection error:', err.stack);
-  } else {
-    console.log('Connected to the database');
-  }
-});
-
 // 確保資料表存在
 async function createTableIfNotExists() {
   const createTableQuery = `
@@ -269,19 +260,25 @@ async function createTableIfNotExists() {
 // 在伺服器啟動時檢查資料表
 createTableIfNotExists();
 
-// 讓後端起床
-app.post('/wakeup', async (req, res) => {
-  try {
-    res.status(200).json('hello');
-  } catch (err) {
-    console.error('Error loading user:', err);
-    res.status(500).send('Server error');
+
+/// 測試資料庫連線
+pool.connect((err) => {
+  if (err) {
+    console.error('Database connection error:', err.stack);
+  } else {
+    console.log('Connected to the database');
   }
 });
 
-app.get('/', (req, res) => {
-  res.send(htmlPage);  // 這裡返回的 html 頁面
-});
+// 讓後端起床
+app.post('/wakeup', async (req, res) =>{
+      try {
+        res.status(200).json('hello');
+      } catch (err) {
+        console.error('Error loading user:', err);
+        res.status(500).send('Server error');
+      }
+})
 
 // 載入或新增使用者資料
 app.post('/load', async (req, res) => {
@@ -324,10 +321,10 @@ app.post('/update-score', async (req, res) => {
     return res.status(400).send('User and score are required');
   }
 
-  try {  // 抓作弊
+  try{  // 抓作弊
     const prev = await pool.query('SELECT * FROM users WHERE username = $1', [user]);
-    if (score - prev.rows[0].score > 70) {
-      return res.status(402).send('No cheating');
+    if(score - prev.rows[0].score > 70){
+        return res.status(402).send('No cheating');
     }
   } catch (err) {
     console.error('Error getting score:', err);
@@ -354,14 +351,15 @@ app.post('/update-score', async (req, res) => {
 
 // 返回排行榜資料，按照 score 排序
 app.get('/leaderboard', async (req, res) => {
-  try {
-    const result = await pool.query('SELECT name, score FROM users ORDER BY score DESC');
-    res.status(200).json(result.rows);
-  } catch (err) {
-    console.error('Error fetching leaderboard:', err);
-    res.status(500).send('Server error');
-  }
-});
+    try {
+      const result = await pool.query('SELECT name, score FROM users ORDER BY score DESC');
+      res.status(200).json(result.rows);
+    } catch (err) {
+      console.error('Error fetching leaderboard:', err);
+      res.status(500).send('Server error');
+    }
+  });
+  
 
 // 設定伺服器監聽埠
 const port = process.env.PORT || 3000;
