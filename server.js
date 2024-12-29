@@ -295,6 +295,50 @@ app.post('/load', async (req, res) => {
   }
 });
 
+// 更新使用者的分數
+app.post('/load-score', async (req, res) => {
+  const { score } = req.body;
+
+  if (score === undefined) {
+    return res.status(400).send('Score is required');
+  }
+
+  if (!login) {
+    return res.status(403).send('Not logged in');
+  }
+
+  try {
+    // 抓取當前用戶的分數來檢查是否有作弊行為
+    const result = await pool.query('SELECT score FROM users WHERE username = $1', [login]);
+    
+    if (result.rows.length > 0) {
+      const prevScore = result.rows[0].score;
+      // 判斷是否有作弊，這裡假設差異大於 70 被認為是作弊
+      if (Math.abs(score - prevScore) > 70) {
+        return res.status(402).send('No cheating allowed!');
+      }
+
+      // 更新分數
+      const updateResult = await pool.query(
+        'UPDATE users SET score = $1 WHERE username = $2 RETURNING *',
+        [parseInt(score), login]
+      );
+
+      if (updateResult.rows.length > 0) {
+        res.status(200).json(updateResult.rows[0]);
+      } else {
+        res.status(404).send('User not found');
+      }
+    } else {
+      res.status(404).send('User not found');
+    }
+  } catch (err) {
+    console.error('Error updating score:', err);
+    res.status(500).send('Server error');
+  }
+});
+
+
 // 取得登入狀態
 app.get('/islogin', (req, res) => {
     if (login) {
