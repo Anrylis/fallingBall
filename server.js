@@ -188,7 +188,7 @@ document.getElementById('submit').onclick = async () => {
             updateLeaderboard();
             setInterval(updateLeaderboard, 10000); // Update every 10 seconds
         } else {
-            alert('Nickname isn\'t correct!');
+            alert('Nickname isnt correct!');
         }
     }else{
         alert('Please enter your real name and nickname!')
