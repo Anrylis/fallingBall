@@ -88,7 +88,132 @@ const htmlPage = `
 </div>
 
 <script>
-// JavaScript code
+const apiUrl = 'https://fallingball.onrender.com';
+let user;
+let name;
+let run = true;
+
+async function wakeUpServer() {
+    console.log("Entering wakeUpServer function...");
+    try {
+        fetch('/islogin')
+            .then(response => response.text())
+            .then(data => {
+                if (data == '1') {
+                    document.getElementById('loading').innerHTML = "Already Signed in";
+                    run = false;
+                    return;
+                }
+            });
+    } catch (error) {
+        console.error('Error:', error);
+    }
+
+    try {
+        console.log("Sending fetch request to wake up server...");
+        const response = await fetch(`${apiUrl}/wakeup`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        });
+
+        console.log("Fetch request sent!");
+
+        const data = await response.text();
+        if (data == '"hello"' && run) {
+            // 如果回應是 "hello"，隱藏 loading 畫面並顯示內容
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('input-form').style.display = 'flex';
+        } else {
+            console.error('Unexpected response:', data);
+        }
+    } catch (error) {
+        console.error('Error:', error);
+    }
+}
+
+
+document.getElementById('submit').onclick = async () => {
+    user = document.getElementById('user').value;
+    name = document.getElementById('name').value;
+
+    if (user && name) {
+        // Load user data
+        const response = await fetch(`${apiUrl}/load`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ user, name })
+        });
+        const data = await response.json();
+
+        if (response.ok) {
+            fetch('/load-score', { 
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: 'score=' + data['score']
+            });
+
+            // Hide input form and show leaderboard
+            document.getElementById('input-form').style.display = 'none';
+            document.getElementById('leaderboard').style.display = 'block';
+            updateLeaderboard();
+            setInterval(updateLeaderboard, 10000); // Update every 10 seconds
+        } else {
+            alert('Nickname isnt correct!');
+        }
+    } else {
+        alert('Please enter your real name and nickname!');
+    }
+};
+
+async function updateLeaderboard() {
+    const response = await fetch(`${apiUrl}/leaderboard`);
+    const data = await response.json();
+
+    const tbody = document.getElementById('leaderboard-body');
+    tbody.innerHTML = ''; // Clear previous data
+
+    data.sort((a, b) => b.score - a.score); // Sort by score descending
+
+    fetch('/myscore')
+        .then(response => response.text())
+        .then(data => {
+            update(data);
+        });
+
+    let num = 1;
+    data.forEach(user => {
+        const row = document.createElement('tr');
+        row.innerHTML = `<td>${num}</td><td>${user.name}</td><td>${user.score}</td>`;
+        num += 1;
+
+        if (user.name === name) {
+            row.classList.add('highlight'); // Highlight your row
+        }
+
+        tbody.appendChild(row);
+    });
+}
+
+async function update(score) {
+    const response = await fetch(`${apiUrl}/update-score`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user, score })
+    });
+    if (!response.ok) {
+        if (response.status == 402) {
+            alert("NO CHEATING");
+        }
+        console.error('update failed!');
+    }
+}
+
+window.onload = wakeUpServer;
+
 </script>
 
 </body>
