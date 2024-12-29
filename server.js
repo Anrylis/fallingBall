@@ -126,23 +126,22 @@ let user;
 let name;
 let run = true;
 
-async function wakeUpServer() {
-    try{
-        fetch('/islogin')
-            .then(response => response.text())
-            .then(data => {
-                if(data == '1'){
-                    document.getElementById('loading').innerHTML = "Already Signed in";
-                    run = false;
-                    return;
-                }
-            });
+ async function wakeUpServer() {
+    try {
+        // 檢查是否已登入
+        const loginResponse = await fetch('/islogin');
+        const loginStatus = await loginResponse.text();
+        if (loginStatus === '1') {
+            document.getElementById('loading').innerHTML = "Already Signed in";
+            run = false;
+            return;
+        }
     } catch (error) {
-        console.error('Error:', error);
+        console.error('Error checking login status:', error);
     }
 
     try {
-        const response = await fetch(apiUrl+'/wakeup', {
+        const response = await fetch(apiUrl + '/wakeup', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -150,8 +149,7 @@ async function wakeUpServer() {
         });
 
         const data = await response.text();
-        if (data == '\"hello\"' && run) {
-            // 如果回應是 "hello"，隱藏 loading 畫面並顯示內容
+        if (data === '"hello"' && run) {
             document.getElementById('loading').style.display = 'none';
             document.getElementById('input-form').style.display = 'flex';
         } else {
@@ -167,37 +165,46 @@ document.getElementById('submit').onclick = async () => {
     name = document.getElementById('name').value;
 
     if (user && name) {
-        login = user;
-        const response = await fetch(apiUrl+'/load', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ user, name })
-        });
-        const data = await response.json();
-        
-        if (response.ok) {
-            fetch('/load-score', { 
+        // 在進行後續處理之前，檢查用戶是否已登錄
+        const loginResponse = await fetch('/islogin');
+        const loginStatus = await loginResponse.text();
+
+        if (loginStatus === '1') {
+            login = user;
+            const response = await fetch(apiUrl + '/load', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: 'score=' + data['score']
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ user, name })
             });
+            const data = await response.json();
 
-            // Hide input form and show leaderboard
-            document.getElementById('input-form').style.display = 'none';
-            document.getElementById('leaderboard').style.display = 'block';
-            updateLeaderboard();
-            setInterval(updateLeaderboard, 10000); // Update every 10 seconds
+            if (response.ok) {
+                fetch('/load-score', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: 'score=' + data['score']
+                });
 
-             login = user;  // 設定為登入的用戶名
+                // Hide input form and show leaderboard
+                document.getElementById('input-form').style.display = 'none';
+                document.getElementById('leaderboard').style.display = 'block';
+                updateLeaderboard();
+                setInterval(updateLeaderboard, 10000); // Update every 10 seconds
+
+                login = user;  // 設定為登入的用戶名
+            } else {
+                alert('Nickname is incorrect!');
+            }
         } else {
-            alert('Nickname isnt correct!');
+            alert('Please log in first!');
         }
-    }else{
-        alert('Please enter your real name and nickname!')
+    } else {
+        alert('Please enter your real name and nickname!');
     }
 };
+
 
 async function update(score) {
     const response = await fetch(apiUrl+'/update-score', {
@@ -263,7 +270,7 @@ app.post('/wakeup', async (req, res) =>{
 // 載入或新增使用者資料
 app.post('/load', async (req, res) => {
   const { user, name } = req.body;
-
+  
   if (!user || !name) {
     return res.status(400).send('User and name are required');
   }
