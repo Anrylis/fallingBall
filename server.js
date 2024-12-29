@@ -167,7 +167,6 @@ document.getElementById('submit').onclick = async () => {
     name = document.getElementById('name').value;
 
     if (user && name) {
-        // Load user data
         login = user;
         const response = await fetch(apiUrl+'/load', {
             method: 'POST',
@@ -268,7 +267,9 @@ app.post('/load', async (req, res) => {
   if (!user || !name) {
     return res.status(400).send('User and name are required');
   }
-
+  
+  login = user;
+  
   try {
     // 查詢是否已有該使用者
     const result = await pool.query('SELECT * FROM users WHERE username = $1', [user]);
