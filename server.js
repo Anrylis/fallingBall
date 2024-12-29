@@ -176,7 +176,7 @@ async function updateLeaderboard() {
 
    // 確保傳遞用戶名
     if (user) {
-        fetch(fetch(apiUrl + '/myscore?user=' + user)  
+        fetch(apiUrl + '/myscore?user=' + user)  
             .then(response => response.text())
             .then(data => {
                 update(data);  // 更新分數
