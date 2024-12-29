@@ -126,7 +126,7 @@ let user;
 let name;
 let run = true;
 
- async function wakeUpServer() {
+async function wakeUpServer() {
     try {
         // 檢查是否已登入
         const loginResponse = await fetch('/islogin');
@@ -203,6 +203,7 @@ document.getElementById('submit').onclick = async () => {
 };
 
 
+
 async function update(score) {
     const response = await fetch(apiUrl+'/update-score', {
         method: 'POST',
@@ -234,7 +235,7 @@ async function updateLeaderboard() {
     let num = 1;
     data.forEach(user => {
         const row = document.createElement('tr');
-        row.innerHTML = '<td>' + num + '</td><td>' + user.name + '</td><td>' + user.score + '</td>';
+        ow.innerHTML = '<td>' + num + '</td><td>' + user.name + '</td><td>' + user.score + '</td>';
         num += 1;
 
         if (user.name === name) {
