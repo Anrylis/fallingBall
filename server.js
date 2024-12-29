@@ -249,7 +249,7 @@ async function createTableIfNotExists() {
     CREATE TABLE IF NOT EXISTS users (
       id SERIAL PRIMARY KEY,
       username VARCHAR(255) UNIQUE NOT NULL,
-      name VARCHAR(255) NOT NULL,
+      name VARCHAR(255) UNIQUE NOT NULL,
       score INTEGER DEFAULT 0
     );
   `;
@@ -327,7 +327,7 @@ app.post('/load', async (req, res) => {
 app.post('/update-score', async (req, res) => {
   const { user, score } = req.body;
 
-  if (!user || score === undefined || isNaN(score) {
+  if (!user || score === undefined || isNaN(score)) {
     return res.status(400).send('User and score are required');
   }
 
