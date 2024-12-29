@@ -235,7 +235,7 @@ async function updateLeaderboard() {
     let num = 1;
     data.forEach(user => {
         const row = document.createElement('tr');
-        ow.innerHTML = '<td>' + num + '</td><td>' + user.name + '</td><td>' + user.score + '</td>';
+        row.innerHTML = '<td>' + num + '</td><td>' + user.name + '</td><td>' + user.score + '</td>';
         num += 1;
 
         if (user.name === name) {
