@@ -182,7 +182,7 @@ document.getElementById('submit').onclick = async () => {
             const scoreResponse = await fetch('/load-score', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded'
+                    'Content-Type': 'application/json'
                 },
                 body: 'score=' + data['score']
             });
