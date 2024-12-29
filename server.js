@@ -26,6 +26,226 @@ pool.connect((err) => {
   }
 });
 
+// 根目錄處理
+app.get('/', (req, res) => {
+  const indexHtml = `
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Score Leaderboard</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            padding: 20px;
+        }
+        #loading {
+            display: block;
+            font-size: 24px;
+        }
+        #input-form {
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        input {
+            margin: 10px 0;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            width: 80%;
+        }
+        button {
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            background-color: #dd00ff;
+            color: white;
+            cursor: pointer;
+            width: 80%;
+        }
+        button:hover {
+            background-color: #ad00b3;
+        }
+        #leaderboard {
+            margin-top: 20px;
+            background-color: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .highlight {
+            background-color: #e1ace1; /* purple color for highlighting */
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 10px;
+            border: 1px solid #ccc;
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+
+<div id="loading">Loading...</div>
+
+<div id="input-form" style="display:none;">
+    <h2>Sign in</h2>
+    <input type="text" id="user" placeholder="Your real name" required>
+    <input type="text" id="name" placeholder="Nickname (Chinese isn't support)" required>
+    <button id="submit">Submit</button>
+</div>
+
+<div id="leaderboard" style="display:none;">
+    <h2>~ Falling Ball Leaderboard ~</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>No.</th>
+                <th>Name</th>
+                <th>Score</th>
+            </tr>
+        </thead>
+        <tbody id="leaderboard-body">
+            <!-- Leaderboard data will be populated here -->
+        </tbody>
+    </table>
+</div>
+
+<script>
+const apiUrl = 'https://fallingball.onrender.com'; 
+let user;
+let name;
+let run = true;
+
+async function wakeUpServer() {
+    try{
+        fetch('/islogin')
+            .then(response => response.text())
+            .then(data => {
+                if(data == '1'){
+                    document.getElementById('loading').innerHTML = "Already Signed in";
+                    run = false;
+                    return;
+                }
+            });
+    } catch (error) {
+        console.error('Error:', error);
+    }
+
+    try {
+        const response = await fetch(apiUrl+'/wakeup', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        });
+
+        const data = await response.text();
+        if (data == '\"hello\"' && run) {
+            // 如果回應是 "hello"，隱藏 loading 畫面並顯示內容
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('input-form').style.display = 'flex';
+        } else {
+            console.error('Unexpected response:', data);
+        }
+    } catch (error) {
+        console.error('Error:', error);
+    }
+}
+
+document.getElementById('submit').onclick = async () => {
+    user = document.getElementById('user').value;
+    name = document.getElementById('name').value;
+
+    if (user && name) {
+        // Load user data
+        const response = await fetch(apiUrl+'/load', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ user, name })
+        });
+        const data = await response.json();
+
+        if (response.ok) {
+            fetch('/load-score', { 
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: 'score=' + data['score']
+            });
+
+            // Hide input form and show leaderboard
+            document.getElementById('input-form').style.display = 'none';
+            document.getElementById('leaderboard').style.display = 'block';
+            updateLeaderboard();
+            setInterval(updateLeaderboard, 10000); // Update every 10 seconds
+        } else {
+            alert('Nickname isn\'t correct!');
+        }
+    }else{
+        alert('Please enter your real name and nickname!')
+    }
+};
+
+async function update(score) {
+    const response = await fetch(apiUrl+'/update-score', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user, score })
+    });
+    if (!response.ok) {
+        if(response.status == 402)
+            alert("NO CHEATING");
+        console.error('update failed!');
+    }
+}
+
+async function updateLeaderboard() {
+    const response = await fetch(apiUrl+'/leaderboard'); // Assume you have an endpoint to get the leaderboard
+    const data = await response.json();
+
+    const tbody = document.getElementById('leaderboard-body');
+    tbody.innerHTML = ''; // Clear previous data
+
+    data.sort((a, b) => b.score - a.score); // Sort by score descending
+
+    fetch('/myscore')
+        .then(response => response.text())
+        .then(data => {
+            update(data);
+        });
+
+    let num = 1;
+    data.forEach(user => {
+        const row = document.createElement('tr');
+        row.innerHTML = '<td>' + num + '</td><td>' + user.name + '</td><td>' + user.score + '</td>';
+        num += 1;
+
+        if (user.name === name) {
+            row.classList.add('highlight'); // Highlight user's row
+        }
+
+        tbody.appendChild(row);
+    });
+}
+
+window.onload = wakeUpServer;
+</script>
+
+</body>
+</html>
+  `;
+  res.send(indexHtml);
+});
+
 // 讓後端起床
 app.post('/wakeup', async (req, res) =>{
       try {
