@@ -231,6 +231,15 @@ app.post('/wakeup', async (req, res) => {
   }
 });
 
+// 判斷是否已經登錄
+app.get('/islogin', (req, res) => {
+  if (Object.keys(users).length > 0) { // 假設有用戶資料即視為已登錄
+    res.status(200).send('1');  // 1 表示已登錄
+  } else {
+    res.status(200).send('0');  // 0 表示未登錄
+  }
+});
+
 // 更新分數
 app.post('/update-score', (req, res) => {
   const { user, score } = req.body;
@@ -247,28 +256,21 @@ app.post('/update-score', (req, res) => {
   }
 });
 
-// 判斷是否已經登錄
-app.get('/islogin', (req, res) => {
-  if (Object.keys(users).length > 0) { // 假設有用戶資料即視為已登錄
-    res.status(200).send('1');  // 1 表示已登錄
-  } else {
-    res.status(200).send('0');  // 0 表示未登錄
-  }
-});
 
+// 查詢某個用戶的分數
 app.get('/myscore', (req, res) => {
-  if (!req.query.user) {
+  const { user } = req.query;
+  if (!user) {
     return res.status(400).send('User is required');
   }
 
-  const user = users[req.query.user];
-  if (!user) {
+  const userData = users[user];
+  if (!userData) {
     return res.status(404).send('User not found');
   }
 
-  res.status(200).send(user.score.toString());
+  res.status(200).send(userData.score.toString());
 });
-
 
 // 返回排行榜資料，按照 score 排序
 app.get('/leaderboard', (req, res) => {
