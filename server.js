@@ -166,17 +166,30 @@ document.getElementById('submit').onclick = async () => {
 };
 
 async function updateLeaderboard() {
-    const leaderboard = Object.values(users).sort((a, b) => b.score - a.score);
+    const response = await fetch(apiUrl+'/leaderboard'); 
+    const data = await response.json();
 
     const tbody = document.getElementById('leaderboard-body');
-    tbody.innerHTML = '';
+    tbody.innerHTML = ''; // Clear previous data
 
-    leaderboard.forEach((user, index) => {
+    data.sort((a, b) => b.score - a.score); // Sort by score descending
+
+    fetch('/myscore')
+        .then(response => response.text())
+        .then(data => {
+            update(data);
+        });
+
+    let num = 1;
+    data.forEach(user => {
         const row = document.createElement('tr');
-        row.innerHTML = '<td>' + num + '</td><td>' + user.name + '</td><td>' + user.score + '</td>';
+         row.innerHTML = '<td>' + (index + 1) + '</td><td>' + user.name + '</td><td>' + user.score + '</td>';
+        num += 1;
+
         if (user.name === name) {
-            row.classList.add('highlight');
+            row.classList.add('highlight'); // Highlight user's row
         }
+
         tbody.appendChild(row);
     });
 }
