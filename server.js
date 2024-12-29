@@ -228,6 +228,15 @@ app.post('/update-score', (req, res) => {
   }
 });
 
+// 判斷是否已經登錄
+app.get('/islogin', (req, res) => {
+  if (Object.keys(users).length > 0) { // 假設有用戶資料即視為已登錄
+    res.status(200).send('1');  // 1 表示已登錄
+  } else {
+    res.status(200).send('0');  // 0 表示未登錄
+  }
+});
+
 // 返回排行榜資料，按照 score 排序
 app.get('/leaderboard', (req, res) => {
   const leaderboard = Object.values(users).sort((a, b) => b.score - a.score);
