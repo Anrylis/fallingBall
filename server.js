@@ -8,6 +8,7 @@ app.use(cors());
 app.use(bodyParser.json());
 
 let users = {}; // 用戶資料將以 { username: { name, score } } 形式儲存
+let loggedInUser = null; // 追踪目前登入的用戶
 
 // 測試路由，返回前端頁面
 const htmlpage = `
@@ -103,7 +104,7 @@ const htmlpage = `
 const apiUrl = 'https://fallingball.onrender.com'; 
 let user;
 let name;
-let run = true;
+let loggedInUser = false;  // 新增變數來標記用戶是否已登錄
 
 async function wakeUpServer() {
     try {
@@ -112,7 +113,7 @@ async function wakeUpServer() {
             .then(data => {
                 if (data == '1') {
                     document.getElementById('loading').innerHTML = "Already Signed in";
-                    run = false;
+                    loggedInUser = true;  // 更新登錄狀態
                     return;
                 }
             });
@@ -129,7 +130,7 @@ async function wakeUpServer() {
         });
 
         const data = await response.text();
-        if (data == '"hello"' && run) {
+        if (data == '"hello"' && !loggedInUser) {
             document.getElementById('loading').style.display = 'none';
             document.getElementById('input-form').style.display = 'flex';
         } else {
@@ -145,18 +146,25 @@ document.getElementById('submit').onclick = async () => {
     name = document.getElementById('name').value;
 
     if (user && name) {
-        // 模擬資料庫操作，檢查用戶是否已經註冊
-        if (users[user]) {
-            if (users[user].name !== name) {
-                alert('Nickname does not match!');
-                return;
-            }
-        } else {
-            users[user] = { name, score: 0 };
+        // 立即同步更新用戶資料，發送至後端
+        const response = await fetch(apiUrl+'/load', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ user, name })
+        });
+
+        if (!response.ok) {
+            alert('Error: ' + await response.text());
+            return;
         }
+
+        // 記錄當前用戶的登錄狀態
+        loggedInUser = user;
 
         document.getElementById('input-form').style.display = 'none';
         document.getElementById('leaderboard').style.display = 'block';
+
+        // 更新排行榜
         updateLeaderboard();
         setInterval(updateLeaderboard, 10000);
     } else {
@@ -165,6 +173,12 @@ document.getElementById('submit').onclick = async () => {
 };
 
 async function updateLeaderboard() {
+    // 確保已經登錄且用戶資料已加載完成
+    if (!loggedInUser) {
+        alert("Please sign in first!");
+        return;
+    }
+
     const response = await fetch(apiUrl+'/leaderboard'); 
     const data = await response.json();
 
@@ -189,6 +203,12 @@ async function updateLeaderboard() {
 
 // 模擬分數更新
 async function update(score) {
+    // 確保已經登錄且用戶資料已加載完成
+    if (!loggedInUser) {
+        alert("Please sign in first!");
+        return;
+    }
+
     const response = await fetch(apiUrl+'/update-score', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -223,7 +243,7 @@ app.post('/wakeup', async (req, res) => {
 
 // 判斷是否已經登錄
 app.get('/islogin', (req, res) => {
-  if (Object.keys(users).length > 0) { // 假設有用戶資料即視為已登錄
+  if (loggedInUser) { // 檢查是否有已登錄的用戶
     res.status(200).send('1');  // 1 表示已登錄
   } else {
     res.status(200).send('0');  // 0 表示未登錄
