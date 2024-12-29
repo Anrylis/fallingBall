@@ -1,4 +1,4 @@
-const htmlPage = `
+const htmlpage = `
 <!DOCTYPE html>
 <html lang="en">
 <head>
