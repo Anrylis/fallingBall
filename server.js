@@ -270,6 +270,11 @@ pool.connect((err) => {
   }
 });
 
+// 路由設置
+app.get('/', (req, res) => {
+    res.send(htmlPage); // 直接返回 HTML 葉面
+});
+
 // 讓後端起床
 app.post('/wakeup', async (req, res) =>{
       try {
