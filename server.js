@@ -303,6 +303,24 @@ app.get('/islogin', (req, res) => {
     }
 });
 
+// 取得當前登入用戶的分數
+app.get('/myscore', async (req, res) => {
+  if (!login) {
+    return res.status(403).send('Not logged in');
+  }
+
+  try {
+    const result = await pool.query('SELECT score FROM users WHERE username = $1', [login]);
+    if (result.rows.length > 0) {
+      res.status(200).send(result.rows[0].score.toString());  // 返回該用戶的分數
+    } else {
+      res.status(404).send('User not found');
+    }
+  } catch (err) {
+    console.error('Error fetching score:', err);
+    res.status(500).send('Server error');
+  }
+});
 
 // 更新使用者的 score
 app.post('/update-score', async (req, res) => {
