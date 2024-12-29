@@ -174,11 +174,14 @@ async function updateLeaderboard() {
 
     data.sort((a, b) => b.score - a.score); // Sort by score descending
 
-    fetch('/myscore')
-        .then(response => response.text())
-        .then(data => {
-            update(data);
-        });
+   // 確保傳遞用戶名
+    if (user) {
+        fetch('/myscore?user=' + user)  
+            .then(response => response.text())
+            .then(data => {
+                update(data);  // 更新分數
+            });
+    }
 
     let num = 1;
     data.forEach(user => {
@@ -195,18 +198,20 @@ async function updateLeaderboard() {
 }
 
 // 模擬分數更新
-async function updateScore(user, score) {
-    if (users[user]) {
-        users[user].score = score;
-        updateLeaderboard();
-    } else {
-        console.error('User not found!');
+async function update(score) {
+    const response = await fetch(apiUrl+'/update-score', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user, score })
+    });
+    if (!response.ok) {
+        console.error('update failed!');
     }
 }
 
 window.onload = wakeUpServer;
-</script>
 
+</script>
 </body>
 </html>
 `;
