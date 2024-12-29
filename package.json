@@ -1,16 +1,18 @@
 {
-  "name": "falling-ball-server",
+  "name": "esp32-postgresql-backend",
   "version": "1.0.0",
-  "description": "Backend for Falling Ball Game",
+  "description": "Backend for ESP32 to send and receive data from PostgreSQL",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
   },
   "dependencies": {
-    "body-parser": "^1.20.1",
     "cors": "^2.8.5",
-    "express": "^4.18.2"
+    "express": "^4.17.1",
+    "pg": "^8.7.1",
+    "body-parser": "^1.19.0"
   },
-  "author": "Anryl ^oxo^///~",
-  "license": "ISC"
+  "engines": {
+    "node": ">=14.0.0"
+  }
 }
