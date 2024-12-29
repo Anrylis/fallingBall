@@ -243,7 +243,7 @@ app.post('/wakeup', async (req, res) => {
 
 // 判斷是否已經登錄
 app.get('/islogin', (req, res) => {
-  if (loggedInUser) { // 檢查是否有已登錄的用戶
+  if (user && name) { // 檢查是否有已登錄的用戶
     res.status(200).send('1');  // 1 表示已登錄
   } else {
     res.status(200).send('0');  // 0 表示未登錄
