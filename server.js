@@ -111,7 +111,7 @@ async function wakeUpServer() {
 
     try {
         console.log("Sending fetch request to wake up server...");
-        const response = await fetch(`${apiUrl}/wakeup`, {
+        const response = await fetch(apiUrl + '/wakeup', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -140,7 +140,7 @@ document.getElementById('submit').onclick = async () => {
 
     if (user && name) {
         // Load user data
-        const response = await fetch(`${apiUrl}/load`, {
+        const response = await fetch(apiUrl + '/load', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ user, name })
@@ -170,7 +170,7 @@ document.getElementById('submit').onclick = async () => {
 };
 
 async function updateLeaderboard() {
-    const response = await fetch(`${apiUrl}/leaderboard`);
+    const response = await fetch(apiUrl + '/leaderboard');
     const data = await response.json();
 
     const tbody = document.getElementById('leaderboard-body');
@@ -187,7 +187,7 @@ async function updateLeaderboard() {
     let num = 1;
     data.forEach(user => {
         const row = document.createElement('tr');
-        row.innerHTML = `<td>${num}</td><td>${user.name}</td><td>${user.score}</td>`;
+        row.innerHTML = '<td>' + num + '</td><td>' + user.name + '</td><td>' + user.score + '</td>';
         num += 1;
 
         if (user.name === name) {
@@ -199,7 +199,7 @@ async function updateLeaderboard() {
 }
 
 async function update(score) {
-    const response = await fetch(`${apiUrl}/update-score`, {
+    const response = await fetch(apiUrl + '/update-score', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ user, score })
@@ -370,5 +370,5 @@ app.get('/leaderboard', async (req, res) => {
 // 設定伺服器監聽埠
 const port = process.env.PORT || 3000;
 app.listen(port, () => {
-  console.log(`Server is running on port ${port}`);
+  console.log('Server is running on port ' + port);
 });
