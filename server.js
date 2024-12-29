@@ -79,7 +79,7 @@ const htmlpage = `
 <div id="input-form" style="display:none;">
     <h2>Sign in</h2>
     <input type="text" id="user" placeholder="Your real name" required>
-    <input type="text" id="name" placeholder="Nickname (Chinese isn't support)" required>
+    <input type="text" id="name" placeholder="Nickname (Chinese isn't supported)" required>
     <button id="submit">Submit</button>
 </div>
 
@@ -104,7 +104,6 @@ const apiUrl = 'https://fallingball.onrender.com';
 let user;
 let name;
 let run = true;
-let users = {};  // 用於存儲用戶資料
 
 async function wakeUpServer() {
     try {
@@ -174,19 +173,10 @@ async function updateLeaderboard() {
 
     data.sort((a, b) => b.score - a.score); // Sort by score descending
 
-   // 確保傳遞用戶名
-    if (user) {
-        fetch(apiUrl + '/myscore?user=' + user)  
-            .then(response => response.text())
-            .then(data => {
-                update(data);  // 更新分數
-            });
-    }
-
     let num = 1;
     data.forEach(user => {
         const row = document.createElement('tr');
-         row.innerHTML = '<td>' + num + '</td><td>' + user.name + '</td><td>' + user.score + '</td>';
+        row.innerHTML = '<td>' + num + '</td><td>' + user.name + '</td><td>' + user.score + '</td>';
         num += 1;
 
         if (user.name === name) {
@@ -240,6 +230,29 @@ app.get('/islogin', (req, res) => {
   }
 });
 
+// 用戶註冊或加載資料的路由
+app.post('/load', (req, res) => {
+    const { user, name } = req.body;
+
+    if (!user || !name) {
+        return res.status(400).send('User and name are required');
+    }
+
+    if (!users[user]) {
+        // 如果用戶不存在，創建新用戶
+        users[user] = { name, score: 0 };
+        return res.status(200).json({ score: 0 });  // 新用戶，返回默認分數 0
+    }
+
+    // 如果用戶已經存在，檢查名字是否匹配
+    if (users[user].name !== name) {
+        return res.status(400).send('Nickname doesn\'t match!');
+    }
+
+    // 返回現有用戶的分數
+    res.status(200).json({ score: users[user].score });
+});
+
 // 更新分數
 app.post('/update-score', (req, res) => {
   const { user, score } = req.body;
@@ -255,7 +268,6 @@ app.post('/update-score', (req, res) => {
     res.status(404).send('User not found');
   }
 });
-
 
 // 查詢某個用戶的分數
 app.get('/myscore', (req, res) => {
@@ -274,7 +286,9 @@ app.get('/myscore', (req, res) => {
 
 // 返回排行榜資料，按照 score 排序
 app.get('/leaderboard', (req, res) => {
-  const leaderboard = Object.values(users).sort((a, b) => b.score - a.score);
+  const leaderboard = Object.values(users)
+    .filter(user => user.name) // 確保用戶有有效的資料
+    .sort((a, b) => b.score - a.score);
   res.status(200).json(leaderboard);
 });
 
