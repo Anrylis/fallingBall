@@ -26,6 +26,8 @@ pool.connect((err) => {
   }
 });
 
+let login = null;
+
 // 根目錄處理
 app.get('/', (req, res) => {
   const indexHtml = `
@@ -166,13 +168,14 @@ document.getElementById('submit').onclick = async () => {
 
     if (user && name) {
         // Load user data
+        login = user;
         const response = await fetch(apiUrl+'/load', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ user, name })
         });
         const data = await response.json();
-
+        
         if (response.ok) {
             fetch('/load-score', { 
                 method: 'POST',
@@ -187,6 +190,8 @@ document.getElementById('submit').onclick = async () => {
             document.getElementById('leaderboard').style.display = 'block';
             updateLeaderboard();
             setInterval(updateLeaderboard, 10000); // Update every 10 seconds
+
+             login = user;  // 設定為登入的用戶名
         } else {
             alert('Nickname isnt correct!');
         }
@@ -209,7 +214,7 @@ async function update(score) {
 }
 
 async function updateLeaderboard() {
-    const response = await fetch(apiUrl+'/leaderboard'); // Assume you have an endpoint to get the leaderboard
+    const response = await fetch(apiUrl+'/leaderboard'); 
     const data = await response.json();
 
     const tbody = document.getElementById('leaderboard-body');
@@ -288,6 +293,16 @@ app.post('/load', async (req, res) => {
     res.status(500).send('Server error');
   }
 });
+
+// 取得登入狀態
+app.get('/islogin', (req, res) => {
+    if (login) {
+        res.status(200).send('1');  // 返回 1 表示已經登入
+    } else {
+        res.status(200).send('0');  // 返回 0 表示尚未登入
+    }
+});
+
 
 // 更新使用者的 score
 app.post('/update-score', async (req, res) => {
