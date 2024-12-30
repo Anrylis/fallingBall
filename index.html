@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Score Leaderboard</title>
-    <style>
+    <title>榮譽榜</title>
+   <style>
         body {
             font-family: Arial, sans-serif;
             background-color: #f0f0f0;
@@ -14,7 +14,7 @@
             display: block;
             font-size: 24px;
         }
-        #input-form {
+        #signInPage { 
             flex-direction: column;
             justify-content: center;
             align-items: center;
@@ -57,21 +57,24 @@
             border: 1px solid #ccc;
             text-align: left;
         }
-    </style>
+    </style> 
 </head>
 <body>
 
+<!--loading介面-->
 <div id="loading">Loading...</div>
 
-<div id="input-form" style="display:none;">
+<!--SignIn介面-->
+<div id="signInPage" style="display:none;">
     <h2>Sign in</h2>
-    <input type="text" id="user" placeholder="Your real name" required>
-    <input type="text" id="name" placeholder="Nickname (Chinese isn't support)" required>
+    <input type="text" id="player" placeholder="ur real name" required>
+    <input type="text" id="nickname" placeholder="ur nickname" required>
     <button id="submit">Submit</button>
 </div>
 
-<div id="leaderboard" style="display:none;">
-    <h2>~ Falling Ball Leaderboard ~</h2>
+<!--leaderBoard介面-->
+<div id="leaderBoard" style="display:none;">
+    <h2>~ Falling Ball 榮譽榜 ~</h2>  
     <table>
         <thead>
             <tr>
@@ -80,33 +83,17 @@
                 <th>Score</th>
             </tr>
         </thead>
-        <tbody id="leaderboard-body">
-            <!-- Leaderboard data will be populated here -->
+        <tbody id="leaderboardsBody">
         </tbody>
     </table>
 </div>
 
 <script>
-const apiUrl = 'https://fallingball.onrender.com'; // Replace with your API URL
+const apiUrl = 'https://fallingball.onrender.com';  
 let user;
 let name;
-let run = true;
 
-async function wakeUpServer() {
-    try{
-        fetch('/islogin')
-            .then(response => response.text())
-            .then(data => {
-                if(data == '1'){
-                    document.getElementById('loading').innerHTML = "Already Signed in";
-                    run = false;
-                    return;
-                }
-            });
-    } catch (error) {
-        console.error('Error:', error);
-    }
-
+async function isServerOk() {
     try {
         const response = await fetch(`${apiUrl}/wakeup`, {
             method: 'POST',
@@ -116,12 +103,12 @@ async function wakeUpServer() {
         });
 
         const data = await response.text();
-        if (data == '\"hello\"' && run) {
-            // 如果回應是 "hello"，隱藏 loading 畫面並顯示內容
+        if (data == '\"ok!\"') { 
+            // 隱藏 Loading ，顯示登入介面 
             document.getElementById('loading').style.display = 'none';
-            document.getElementById('input-form').style.display = 'flex';
+            document.getElementById('signInPage').style.display = 'flex';
         } else {
-            console.error('Unexpected response:', data);
+            console.error('未知錯誤：', data);
         }
     } catch (error) {
         console.error('Error:', error);
@@ -129,83 +116,98 @@ async function wakeUpServer() {
 }
 
 document.getElementById('submit').onclick = async () => {
-    user = document.getElementById('user').value;
-    name = document.getElementById('name').value;
+    user = document.getElementById('player').value;  // 得到輸入欄位的內容
+    name = document.getElementById('nickname').value;
 
     if (user && name) {
-        // Load user data
-        const response = await fetch(`${apiUrl}/load`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ user, name })
-        });
+        // 檢查是否有其他帳號使用過相同的真名或暱稱
+        const response = await fetch(`${apiUrl}/checkUnique?realname=${user}&nickname=${name}`);
         const data = await response.json();
+        
+        if (data.error) {
+            alert(data.error);  // 顯示錯誤訊息
+            return;
+        }
 
-        if (response.ok) {
-            fetch('/load-score', { 
+        // 如果是首次登入（即為找不到該玩家帳號），創建新帳號，分數設為0
+        if (!data.exists) {
+            await fetch(`${apiUrl}/createAccount`, {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded'
+                    'Content-Type': 'application/json',
                 },
-                body: 'score=' + data['score']
+                body: JSON.stringify({ realname: user, nickname: name, score: 0 }),
             });
-
-            // Hide input form and show leaderboard
-            document.getElementById('input-form').style.display = 'none';
-            document.getElementById('leaderboard').style.display = 'block';
-            updateLeaderboard();
-            setInterval(updateLeaderboard, 10000); // Update every 10 seconds
         } else {
-            alert('Nickname isn\'t correct!');
+            //調試用
+            console.log("登入成功！");
         }
-    }else{
-        alert('Please enter your real name and nickname!')
+
+        // 隱藏登入介面，顯示排行榜
+        document.getElementById('signInPage').style.display = 'none';
+        document.getElementById('leaderboard').style.display = 'block';
+        updateLeaderboard();
+
+    } else {
+        alert('Please enter your real name and nickname.')
     }
 };
 
 async function update(score) {
-    const response = await fetch(`${apiUrl}/update-score`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ user, score })
-    });
-    if (!response.ok) {
-        if(response.status == 402)
-            alert("NO CHEATING");
-        console.error('update failed!');
-    }
-}
-
-async function updateLeaderboard() {
-    const response = await fetch(`${apiUrl}/leaderboard`); // Assume you have an endpoint to get the leaderboard
+    // 接收esp32遊玩的分數，上傳至後台
+    const response = await fetch(`${apiUrl}/getScore?nickname=${name}`);
     const data = await response.json();
 
-    const tbody = document.getElementById('leaderboard-body');
-    tbody.innerHTML = ''; // Clear previous data
-
-    data.sort((a, b) => b.score - a.score); // Sort by score descending
-
-    fetch('/myscore')
-        .then(response => response.text())
-        .then(data => {
-            update(data);
+    if (data && data.score < score) {
+        //使後台紀錄的分數是該玩家遊玩的歷史最高分
+        await fetch(`${apiUrl}/updateScore`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ nickname: name, score: score }),
         });
+    }
 
-    let num = 1;
-    data.forEach(user => {
-        const row = document.createElement('tr');
-        row.innerHTML = `<td>${num}</td><td>${user.name}</td><td>${user.score}</td>`;
-        num += 1;
+    // 更新排行榜
+    updateLeaderboard();
+}
 
-        if (user.name === name) {
-            row.classList.add('highlight'); // Highlight user's row
+
+async function updateLeaderboard() {
+    // 抓取後台所有帳號資料
+    const response = await fetch(`${apiUrl}/leaderboard`);
+    const data = await response.json();
+    data.sort((a, b) => b.score - a.score); // 按照最高分數紀錄由高至低排序
+
+    const tbody = document.getElementById('leaderboardsBody');
+    const rows = tbody.getElementsByTagName('tr');  // 獲取所有現有的行
+
+    let num = 0;
+    data.forEach(account => {
+        if (num < rows.length) {
+            // 更新已有行之資料
+            const row = rows[num];
+            row.children[0].textContent = num + 1; 
+            row.children[1].textContent = account.name; 
+            row.children[2].textContent = account.score; 
+        } else {
+            // 新增新的行
+            const row = document.createElement('tr');
+            row.innerHTML = `<td>${num + 1}</td><td>${account.name}</td><td>${account.score}</td>`;
+            tbody.appendChild(row);
+        }
+        
+        if (account.name === name) {
+        	// 高亮顯示當前玩家的欄位
+            row.classList.add('highlight');
         }
 
-        tbody.appendChild(row);
+        num += 1;
     });
 }
 
-window.onload = wakeUpServer;
+window.onload = isServerOk;
 </script>
 
 </body>
