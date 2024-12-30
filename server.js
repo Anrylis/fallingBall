@@ -35,6 +35,11 @@ client.query(createTableQuery)
   .then(() => console.log('Players table created or already exists'))
   .catch(err => console.log(err));
 
+// 訪問網站
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'index.html'));
+});
+
 // 唤醒接口
 app.post('/wakeup', (req, res) => {
     res.send('"ok!"');
