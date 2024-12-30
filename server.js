@@ -2,6 +2,7 @@ const express = require('express');
 const { Client } = require('pg'); // 引入 PostgreSQL 驅動
 const app = express();
 const port = process.env.PORT || 3000;
+const path = require('path');
 
 // 連接到 PostgreSQL 資料庫
 const client = new Client({
