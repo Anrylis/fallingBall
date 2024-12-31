@@ -154,7 +154,6 @@ document.getElementById('submit').onclick = async () => {
 };
 
 async function update(score) {
-    // 接收esp32遊玩的分數，上傳至後台
     const response = await fetch(`${apiUrl}/getScore?nickname=${name}`);
     const data = await response.json();
 
@@ -165,7 +164,7 @@ async function update(score) {
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ nickname: name, score: score }),
+            body: JSON.stringify({ realname: user, nickname: name, score: score }),
         });
     }
 
@@ -175,13 +174,12 @@ async function update(score) {
 
 
 async function updateLeaderboard() {
-    // 抓取後台所有帳號資料
     const response = await fetch(`${apiUrl}/leaderboard`);
     const data = await response.json();
     data.sort((a, b) => b.score - a.score); // 按照最高分數紀錄由高至低排序
 
     const tbody = document.getElementById('leaderboardsBody');
-    const rows = tbody.getElementsByTagName('tr');  // 獲取所有現有的行
+    const rows = tbody.getElementsByTagName('tr');  // 獲取所有帳戶資料
 
     let num = 0;
     data.forEach(account => {
