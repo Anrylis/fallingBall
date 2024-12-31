@@ -48,16 +48,18 @@ app.post('/wakeup', (req, res) => {
 
 // 檢查真名和暱稱是否唯一
 app.get('/checkUnique', async (req, res) => {
-    const { realname, nickname } = req.query;
+    const { realname, nickname } = req.query; // 獲取真名和暱稱
     try {
         const result = await client.query(
-            'SELECT * FROM players WHERE realname = $1 OR nickname = $2',
+            'SELECT * FROM players WHERE realname = $1 OR nickname = $2', // 查詢真名或暱稱是否已存在
             [realname, nickname]
         );
+        
         if (result.rows.length > 0) {
-            return res.json({ error: 'The real name or nickname is already taken.' });
+            return res.json({ exists: true }); // 有匹配的記錄
         }
-        res.json({ exists: false });
+
+        res.json({ exists: false }); // 無匹配的記錄，使前端發送創建新帳號的請求
     } catch (err) {
         console.log(err);
         res.status(500).json({ error: 'Internal server error' });
