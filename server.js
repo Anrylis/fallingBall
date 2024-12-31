@@ -36,7 +36,7 @@ client.query(createTableQuery)
   .then(() => console.log('Players table created or already exists'))
   .catch(err => console.log(err));
 
-// 訪問網站
+// 根目錄：訪問網站
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
