@@ -187,16 +187,16 @@ async function updateLeaderboard() {
             // 更新已有行之資料
             const row = rows[num];
             row.children[0].textContent = num + 1; 
-            row.children[1].textContent = account.name; 
+            row.children[1].textContent = account.nickname; 
             row.children[2].textContent = account.score; 
         } else {
             // 新增新的行
             const row = document.createElement('tr');
-            row.innerHTML = `<td>${num + 1}</td><td>${account.name}</td><td>${account.score}</td>`;
+            row.innerHTML = `<td>${num + 1}</td><td>${account.nickname}</td><td>${account.score}</td>`;
             tbody.appendChild(row);
         }
         
-        if (account.name === name) {
+        if (account.nickname === name) {
         	// 高亮顯示當前玩家的欄位
             row.classList.add('highlight');
         }
