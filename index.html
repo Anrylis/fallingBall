@@ -46,7 +46,7 @@
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
         }
         .highlight {
-            background-color: #e1ace1; /* purple color for highlighting */
+            background-color: #e1ace1; /* purple */
         }
         table {
             width: 100%;
@@ -195,9 +195,9 @@ async function updateLeaderboard() {
             row.innerHTML = `<td>${num + 1}</td><td>${account.nickname}</td><td>${account.score}</td>`;
             tbody.appendChild(row);
         }
-        
+
+        // 高亮顯示當前玩家的欄位
         if (account.nickname === name) {
-        	// 高亮顯示當前玩家的欄位
             row.classList.add('highlight');
         }
 
