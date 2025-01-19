@@ -128,19 +128,6 @@ app.get('/leaderboard', async (req, res) => {
     }
 });
 
-// 清空資料表
-app.post('/clearTable', async (req, res) => {
-    const truncateQuery = 'TRUNCATE TABLE players'; // 清空資料表內容
-
-    try {
-        await client.query(truncateQuery);  // 執行清空資料的指令
-        res.status(200).json({ message: 'Players table cleared' });  // 返回成功訊息
-    } catch (err) {
-        console.log(err);
-        res.status(500).json({ error: 'Error clearing the table' });  // 返回錯誤訊息
-    }
-});
-
 // 啟動伺服器
 app.listen(port, () => {
     console.log(`Server is running at http://localhost:${port}`);
