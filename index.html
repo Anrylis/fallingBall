@@ -167,7 +167,10 @@ async function update(score) {
             body: JSON.stringify({ realname: user, nickname: name, score: score }),
         });
     }
-
+    
+    if (score > 10000) {
+        alert('哈?真的假的？');
+    }
     // 更新排行榜
     updateLeaderboard();
 }
