@@ -208,7 +208,13 @@ async function updateLeaderboard() {
     });
 }
 
-window.onload = isServerOk;
+window.onload = () => {
+    isServerOk();
+    
+    setInterval(() => {
+        updateLeaderboard();
+    }, 1800000);  
+};
 </script>
 
 </body>
