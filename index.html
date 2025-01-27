@@ -9,6 +9,7 @@
             font-family: Arial, sans-serif;
             background-color: #f0f0f0;
             padding: 20px;
+            box-sizing: border-box;
         }
         #loading {
             display: block;
@@ -44,6 +45,8 @@
             padding: 20px;
             border-radius: 5px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            overflow-x: auto;
+            min-width: 600px;
         }
         .highlight {
             background-color: #e1ace1; /* purple */
@@ -56,6 +59,19 @@
             padding: 10px;
             border: 1px solid #ccc;
             text-align: left;
+        }
+       #leaderboard table {
+            width: 100%;    
+            border-collapse: collapse;
+            max-height: 400px;  
+            overflow-y: auto;   
+            display: block;   
+        }
+
+        #leaderboard tbody {
+            display: block;
+            max-height: 400px;
+            overflow-y: auto;
         }
     </style> 
 </head>
