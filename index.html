@@ -182,24 +182,16 @@ async function updateLeaderboard() {
     data.sort((a, b) => b.score - a.score); // 按照最高分數紀錄由高至低排序
 
     const tbody = document.getElementById('leaderboardsBody');
-    const rows = tbody.getElementsByTagName('tr');  // 獲取所有帳戶資料
+    // 清空現有的表格行
+    tbody.innerHTML = '';
 
     let num = 0;
     data.forEach(account => {
-        if (num < rows.length) {
-            // 更新已有行之資料
-            const row = rows[num];
-            row.children[0].textContent = num + 1; 
-            row.children[1].textContent = account.nickname; 
-            row.children[2].textContent = account.score; 
-        } else {
-            // 新增新的行
-            const row = document.createElement('tr');
-            row.innerHTML = `<td>${num + 1}</td><td>${account.nickname}</td><td>${account.score}</td>`;
-            tbody.appendChild(row);
-        }
+        const row = document.createElement('tr');
+        row.innerHTML = `<td>${num + 1}</td><td>${account.nickname}</td><td>${account.score}</td>`;
+        tbody.appendChild(row);
 
-        // 高亮顯示當前玩家的欄位
+        // highlight你怎麼不見了?
         if (account.nickname === name) {
             row.classList.add('highlight');
         }
